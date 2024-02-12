@@ -3,7 +3,7 @@
 const { Client, LocalAuth } = require("whatsapp-web.js");
 const qrcode = require("qrcode");
 const express = require("express");
-var port = process.env.PORT;
+var port = process.env.PORT || 3000;
 var app = express();
 var server = app.listen(port, function () {
   console.log("server listening at", server.address());
@@ -14,25 +14,28 @@ var io = require("socket.io")(server, {
   },
 });
 
-const client = new Client({
-  authStrategy: new LocalAuth({
-    dataPath: process.env.FOLDER,
-  }),
-  puppeteer: {
-    headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-accelerated-2d-canvas",
-      "--no-first-run",
-      "--no-zygote",
-      "--disable-gpu",
-    ],
-  },
-});
 
-function conectWA(socket) {
+function conectWA(socket, folder, id) {
+
+  const client = new Client({
+    authStrategy: new LocalAuth({
+      dataPath: folder,
+      clientId: id
+    }),
+    puppeteer: {
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-accelerated-2d-canvas",
+        "--no-first-run",
+        "--no-zygote",
+        "--disable-gpu",
+      ],
+    },
+  });
+
   client.on("qr", async (qr) => {
     let data_qr = await qrcode.toDataURL(qr);
     console.log("qr-send " + port);
@@ -77,7 +80,7 @@ function conectWA(socket) {
 
 io.on("connection", (socket) => {
   console.log("connected-socket" + port);
-  socket.on("qr", () => {
-    conectWA(socket);
+  socket.on("qr", (folder, id) => {
+    conectWA(socket, folder, id);
   });
 });
