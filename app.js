@@ -1,6 +1,6 @@
 // Package yang di gunakan
 // express api
-const { Client, LocalAuth } = require("whatsapp-web.js");
+const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js");
 const qrcode = require("qrcode");
 const express = require("express");
 let clients = {};
@@ -38,12 +38,12 @@ function conectWA(socket, id) {
   let inc = 0;
   client.on("qr", async (qr) => {
     let data_qr = await qrcode.toDataURL(qr);
-    console.log("qr-send " + port);
-    console.log(qr);
+    console.log("qr-send " + port + " " + id);
     socket.emit("qr-message", data_qr);
     inc++;
     if (inc > 5) {
-      console.log("Destroying client...");
+      console.log("Destroying client... " + id);
+      socket.emit("qr-destroy ", true);
       client.destroy();
     }
   });
@@ -68,12 +68,18 @@ io.on("connection", (socket) => {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.post("/api/send", (req, res) => {
+app.post("/api/send", async (req, res) => {
   const phone = req.body.phone;
   const message = req.body.message;
   const client_id = req.body.client_id;
+  const media = await MessageMedia.fromUrl(
+    "https://via.placeholder.com/350x150.png"
+  );
+
   clients[client_id]
-    .sendMessage(phone.substring(1) + "@c.us", message)
+    .sendMessage(phone.substring(1) + "@c.us", media, {
+      caption: message,
+    })
     .then((response) => {
       res.status(200).json({
         error: false,
