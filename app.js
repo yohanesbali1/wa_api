@@ -32,13 +32,20 @@ function conectWA(socket, id) {
         "--no-zygote",
         "--disable-gpu",
       ],
+      timeout: 30000,
     },
   });
-
+  let inc = 0;
   client.on("qr", async (qr) => {
     let data_qr = await qrcode.toDataURL(qr);
     console.log("qr-send " + port);
+    console.log(qr);
     socket.emit("qr-message", data_qr);
+    inc++;
+    if (inc > 5) {
+      console.log("Destroying client...");
+      client.destroy();
+    }
   });
 
   //Proses Dimana Whatsapp-web.js Siap digunakan
