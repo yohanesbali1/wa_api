@@ -4,7 +4,7 @@ const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js");
 const qrcode = require("qrcode");
 const express = require("express");
 let clients = {};
-var port = process.env.PORT || 3000;
+var port = process.env.PORT || 3001;
 var app = express();
 var server = app.listen(port, function () {
   console.log("server listening at", server.address());
